@@ -2,7 +2,7 @@ const axios=require('axios');
 const transactionModel = require("../models/transactionModel");
 const currencyModel=require("../models/curerencyModel")
 
-//
+//1. Develop an API  fetch the crypto transactions of a user using address..
 const transcation=async(req,res)=>{
     try {
         let options = {
@@ -17,7 +17,8 @@ const transcation=async(req,res)=>{
     }
 }
 
-//
+//2.  transactions for this address. store these transactions against this address in a database, in MongoDB.
+
 const registerAddress=async(req,res)=>{
     try{
         if(!req.body.address || !req.body.transaction)
@@ -31,7 +32,8 @@ const registerAddress=async(req,res)=>{
     }
 }
 
-//
+//3. fetch the price of Ethereum
+
 const ethereum=async(req,res)=>{
     try {
         let options = {
@@ -55,7 +57,7 @@ const ethereum=async(req,res)=>{
     }
 }
 
-//
+//04 adding the currency in database
 
 const registerCurrency=async(req,res)=>{
     try{
@@ -67,7 +69,8 @@ const registerCurrency=async(req,res)=>{
     }
 }
 
-//
+//05  fetch the price of Ethereum every 10 everytime
+
 
 const getterrr=async(req,res)=>{
     try {
@@ -78,7 +81,8 @@ const getterrr=async(req,res)=>{
     }
 }
 
-//
+//06  `GET` API for a user where they give their address as an input and get their current balance and current price of ether as output.
+
 
 const getUserDetails=async(req,res)=>{
     try{
@@ -98,37 +102,54 @@ const getUserDetails=async(req,res)=>{
 }
 
 
-//
+//07 transaction
 
 
 const dealing=async(req,res)=>{
     try{
-        let address1=req.params.address1;
-        let address2=req.params.address2;
-        let choice=req.query.choice;
-
-      //  if(choice==="from"){
-             let findFromprice=await transactionModel.findOne({address2})
-             let fromPrice=findFromprice.transaction;  //money froim add2
+        console.log(req.query.choice)
+        /* froms add1 to add2
+            take the amount from add1 into a var and make it zero
+            add it to add2 transaction
+        */
+      if(req.query.choice==="from"){
+             let user1=await transactionModel.findOne({address:req.params.address1})
+             let user1Money=user1.transaction;  //money froim add2
             
-             let toAddress=await transactionModel.findOne({address1})
+             let user2=await transactionModel.findOne({address:req.params.address2})
+             let user2Money=user2.transaction
+
+           let update1={};
+           let update2={} ;
+
+          update2["transaction"]=(+user1Money)+(+user2Money)
+          update1["transaction"]=0;
+
+           await transactionModel.findOneAndUpdate({address:req.params.address1},update1)
+           await transactionModel.findOneAndUpdate({address:req.params.address2},update2)
+
+             let dataa=await transactionModel.findOne({address:req.params.address1})
+             return res.status(200).send({data:dataa})
+       }else{
+                     // to add1 from addr2
             
-             let update={},update2={}
+           let sender=await transactionModel.findOne({address:req.params.address2})
+           let senderMoney=sender.transaction;
 
-             update2["transaction"]=+fromPrice + (+toAddress.transaction);
+           let reciever=await transactionModel.findOne({address:req.params.address1})
+           let recieverMoney=reciever.transaction;
 
-             update["transaction"]=0;
+           let update1={};let update2={};
 
-            
+           update1["transaction"]=(+senderMoney)+(+recieverMoney)
+           update2['transaction']=0;
 
-             await transactionModel.findOneAndUpdate({address1},update2)
-             await transactionModel.findOneAndUpdate({address2},update)
+           await transactionModel.findOneAndUpdate({address:req.params.address1},update1)
+           await transactionModel.findOneAndUpdate({address:req.params.address2},update2)
 
-
-             let dataa=await transactionModel.findOne({address1})
-
-             return res.send({data:dataa})
-       // }
+           let dataa=await transactionModel.findOne({address:req.params.address1})
+           return res.status(200).send({data:dataa})
+       }
 
     }catch(err){
         return res.status(500).send({msg:err.msg})
